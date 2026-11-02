@@ -1,6 +1,6 @@
 # PARADOX: Temporal Programming
 
-PARADOX is a small, time-travel-themed programming language with its own compiler front end and a desktop IDE, written in Python. It is the final project for **CS0035**.
+PARADOX is a small, time-travel-themed programming language with its own compiler front end and a desktop IDE, written in Python.
 
 You write PARADOX scripts in the built-in console. Each script goes through three compiler phases (lexical analysis, syntax analysis and semantic analysis), and the results show up live in a Universal Symbol Table panel. The IDE has two modes:
 
@@ -162,14 +162,14 @@ After Mission 10 the paradox is contained and Sandbox Mode is unlocked.
 
 ## Test case matrix
 
-| Test | Input | Expected result | Status |
+| Test | Input | Expected compiler narrative | Status |
 |---|---|---|---|
-| **TC1: Happy path** | The example script shown above | All phases pass and the data is stored | PASS |
-| **TC2: Syntax error** | `cycle velocity 88 @` followed by `observe velocity @` | Assignment operator error | FAIL |
-| **TC3: Semantic error** | `cycle temperature << "Critical" @` followed by `observe temperature @` | Type mismatch (`cycle` assigned a `trace` literal) | FAIL |
-| **TC4: Lexical error** | `canon *checkTimeline << true @` | Foreign artifact encountered | FAIL |
+| **TC1: Happy path** | The example script shown above | Verified all phases, data stored | PASS |
+| **TC2: Syntax error** | `cycle velocity 88 @` followed by `observe velocity @` | Error: assignment operator missing | FAIL |
+| **TC3: Semantic error** | `cycle temperature << "Critical" @` followed by `observe temperature @` | Error: type mismatch (`cycle` assigned a `trace` literal) | FAIL |
+| **TC4: Lexical error** | `canon *checkTimeline << true @` | Error: foreign artifact `*` encountered | FAIL |
 
-"FAIL" means the compiler rejects the input as expected for that error case.
+A status of FAIL means the compiler rejects the input, which is the expected result for the error cases.
 
 ---
 
@@ -178,7 +178,4 @@ After Mission 10 the paradox is contained and Sandbox Mode is unlocked.
 | File | Description |
 |---|---|
 | [PARADOX_FINAL.py](PARADOX_FINAL.py) | Complete source: lexer, parser, semantic analyzer, and Tkinter GUI |
-| [PARADOX_DOCUMENTATION.pdf](PARADOX_DOCUMENTATION.pdf) | Official language documentation and cheat sheet |
 | [PARADOX_SCREENSHOTS.pdf](PARADOX_SCREENSHOTS.pdf) | Screenshots of the application |
-
-A demonstration video of the project is not included in this repository.
