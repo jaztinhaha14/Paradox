@@ -40,7 +40,6 @@ You write PARADOX scripts in the built-in console. Each script goes through thre
 - Python 3.8 or newer
 - Tkinter, which ships with the standard Python installer for Windows and macOS. On some Linux distributions you need to install it separately (for example `sudo apt install python3-tk`).
 
-There are no third-party dependencies.
 
 ## Running PARADOX
 
