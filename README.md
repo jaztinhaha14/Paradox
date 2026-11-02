@@ -1,206 +1,184 @@
-# S-Aging — Banana Disease Spread Simulator
+# PARADOX: Temporal Programming
 
-An interactive web application that combines **YOLOv11 instance segmentation** with **Stochastic Cellular Automata (SCA)** to simulate the 3D spatio-temporal progression of banana leaf diseases. Built as an undergraduate thesis project at **FEU Institute of Technology (2026)**.
+PARADOX is a small, time-travel-themed programming language with its own compiler front end and a desktop IDE, written in Python. It is the final project for **CS0035**.
+
+You write PARADOX scripts in the built-in console. Each script goes through three compiler phases (lexical analysis, syntax analysis and semantic analysis), and the results show up live in a Universal Symbol Table panel. The IDE has two modes:
+
+- **Story Mode** is an 11-mission narrative where you use the language to contain a paradox and repair a fractured timeline.
+- **Sandbox Mode** is free play for testing any construct, with no mission events.
 
 ---
 
-## What it does
+## Contents
 
-1. **Detect.** Upload a banana leaf photo (or pick a built-in demo). A YOLOv11-seg model runs entirely in-browser via ONNX Runtime Web and produces an instance mask.
-2. **Configure.** Pick a disease, set temperature, relative humidity, and plant density.
-3. **Simulate.** A Python SCA engine evolves a Moore-8 neighbourhood lattice over **31 monthly steps** (months 0–30) seeded from the YOLO mask.
-4. **Visualise.** Each frame is rendered as a 3D leaf in PyVista, JPEG-encoded, and streamed back as NDJSON for live playback.
-5. **Track.** A Supabase-backed auth + activity service records sessions, profile changes, and runs per user.
+- [Features](#features)
+- [Requirements](#requirements)
+- [Running PARADOX](#running-paradox)
+- [Language reference](#language-reference)
+- [Compiler pipeline](#compiler-pipeline)
+- [Story Mode walkthrough](#story-mode-walkthrough)
+- [Test case matrix](#test-case-matrix)
+- [Repository contents](#repository-contents)
 
-Two pathogens are modeled:
+---
 
-| Disease | Pathogen | Spread model |
+## Features
+
+- Custom language with its own data types, operators, and keywords
+- Three-phase compiler front end: lexer, parser, and semantic analyzer
+- Symbol table with scope levels and byte offsets per variable
+- Timeline commands: `snapshot`, `revert`, `prune`, and `branch`
+- Object-oriented constructs: `entity` blueprints and `invoke` instantiation
+- `bootstrap` loops (the language's while-loop equivalent)
+- Tkinter GUI with a compiler console, a live symbol table, and an animated timeline visualizer
+- Color-coded compiler output (lexer, parser, and semantic messages)
+
+---
+
+## Requirements
+
+- Python 3.8 or newer
+- Tkinter, which ships with the standard Python installer for Windows and macOS. On some Linux distributions you need to install it separately (for example `sudo apt install python3-tk`).
+
+There are no third-party dependencies.
+
+## Running PARADOX
+
+```bash
+python PARADOX_FINAL.py
+```
+
+Choose a mode from the start menu, type a script into the `Paradox >` input box, and press **[ EXECUTE SCRIPT ]**.
+
+Other controls:
+
+- **[ < MAIN MENU ]** returns to the start menu.
+- **[ SYS.RESET ]** wipes the symbol table, snapshots, and entities. In Story Mode it also restarts the mission.
+
+---
+
+## Language reference
+
+Every statement ends with the `@` delimiter.
+
+### Data types
+
+| PARADOX type | Equivalent | Description | Example |
+|---|---|---|---|
+| `cycle` | `int` | Numeric data | `2100` |
+| `trace` | `string` | Residual text left in the timeline | `"Anomaly detected"` |
+| `canon` | `boolean` | Unchangeable truth or falsehood | `fixed` (true), `erased` (false) |
+
+### Operators and keywords
+
+| PARADOX | Equivalent | Notes |
 |---|---|---|
-| **Fusarium Wilt TR4** | *Fusarium oxysporum* f. sp. *cubense* | Marginal-lateral (margin-first chlorosis) |
-| **Black Sigatoka** | *Pseudocercospora fijiensis* | Longitudinal σ-β (streak coalescence) |
+| `<<` | `=` | Assignment |
+| `@` | `;` | Statement delimiter |
+| `observe` | `print` | Outputs a variable's value |
+| `+` `-` `*` `/` | Standard | Arithmetic |
+| `==` `>` `<` `>=` `<=` | Standard | Comparison, used in `bootstrap` conditions |
 
----
+### Core grammar
 
-## Architecture
+| Action | Structure | Example |
+|---|---|---|
+| Assignment | `[DATATYPE] [ID] << [LITERAL] @` | `cycle timeSkip << 2077 @` |
+| Observation | `observe [ID] @` | `observe timeSkip @` |
+| Chronomath | `[DATATYPE] [ID] << [LITERAL/ID] [MATH_OP] [LITERAL] @` | `cycle offset << 10 + 5 @` |
 
-```
-┌─────────────────┐    ONNX inference    ┌──────────────────┐
-│  React frontend │ ───────────────────▶ │  YOLOv11-seg     │
-│  (Vite, port    │                      │  (in browser)    │
-│   5173)         │                      └──────────────────┘
-│                 │
-│                 │    POST /api/simulate (NDJSON stream)
-│                 │ ───────────────────▶ ┌──────────────────┐
-│                 │                      │ FastAPI sim API  │
-│                 │ ◀─────────────────── │ (port 8001)      │
-│                 │   31 frames          │ SCA + PyVista    │
-│                 │                      └──────────────────┘
-│                 │
-│                 │    Supabase JWT      ┌──────────────────┐
-│                 │ ───────────────────▶ │ Auth/Logs API    │
-│                 │ ◀─────────────────── │ (Node, port 3001)│
-│                 │   profile + logs     │ + Supabase DB    │
-└─────────────────┘                      └──────────────────┘
-```
+### Advanced mechanics
 
----
+| Feature | Grammar | Description |
+|---|---|---|
+| Entity blueprint | `entity [NAME] { [DATATYPE] [ID] << [LITERAL] @ }` | Declares a blueprint for a complex timeline object |
+| Object instantiation | `[CLASS_ID] [OBJECT_ID] << invoke [CLASS_ID] @` | Allocates isolated temporal memory for a new object from an entity blueprint |
+| Bootstrap loop | `bootstrap ( [ID] [OP] [LITERAL] ) { [ID] << [ID] [MATH] [LITERAL] @ } origin @` | Loops until the condition fails |
+| State snapshot | `snapshot [LITERAL] @` | Archives an exact copy of the Universal Symbol Table under a string name |
+| State revert | `revert [LITERAL] @` | Wipes current memory and restores the Universal Symbol Table to the named snapshot |
+| Variable pruning | `prune [ID] @` | Removes one variable from the Universal Symbol Table |
+| Branching | `branch @` and `prune branch @` | `branch @` moves into a deeper scope level, like opening a block (`{`). `prune branch @` collapses back to the previous level, like closing a block (`}`) |
 
-## Tech stack
-
-**Frontend** — `s-aging-app/`
-- React 19 + Vite 8
-- Motion (Framer Motion v12) for transitions
-- ONNX Runtime Web for client-side YOLOv11-seg inference
-- `@supabase/supabase-js` for direct auth/profile reads
-- Lucide React icons
-
-**Simulation backend** — `backend/`
-- FastAPI + Uvicorn
-- Stochastic Cellular Automata engine (Moore 8-cell neighbourhood)
-- PyVista + VTK for 3D leaf mesh rendering
-- NumPy, SciPy, OpenCV, Pillow
-- CLAHE + Gamma Correction preprocessing
-
-**Auth & logging service** — `auth-service/`
-- Node.js + Express 5
-- Supabase (Postgres + Auth + Storage)
-- bcryptjs, multer (profile picture uploads, 5 MB cap)
-
----
-
-## Prerequisites
-
-- Node.js 18+
-- Python 3.10+
-- A Supabase project (URL + anon key + service-role key)
-
----
-
-## Setup
-
-### 1. Database
-
-Run [supabase_profiles_setup.sql](supabase_profiles_setup.sql) inside the Supabase SQL editor to create the `profiles` and `activity_logs` tables, RLS policies, and the `profile-pictures` storage bucket.
-
-### 2. Frontend
-
-```bash
-cd s-aging-app
-npm install
-npm run dev
-```
-
-Create `s-aging-app/.env.local`:
+### Example
 
 ```
-VITE_SUPABASE_URL=https://<your-project>.supabase.co
-VITE_SUPABASE_ANON_KEY=<anon-key>
-VITE_AUTH_API=http://localhost:3001
-VITE_SIM_API=http://localhost:8001
-```
-
-Opens at `http://localhost:5173`.
-
-### 3. Simulation backend
-
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8001
-```
-
-(Windows users can also run `start.bat`.)
-
-### 4. Auth service
-
-```bash
-cd auth-service
-npm install
-npm run start
-```
-
-Create `auth-service/.env`:
-
-```
-PORT=3001
-SUPABASE_URL=https://<your-project>.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
-CORS_ORIGIN=http://localhost:5173
-```
-
-> The simulation runs in demo-mode without the FastAPI backend, but live PyVista frames require it. The auth service is required for sign-in, profile editing, and activity history.
-
----
-
-## Project structure
-
-```
-.
-├── README.md
-├── supabase_profiles_setup.sql        # DB schema + RLS + storage bucket
-├── train_yolov11_seg.ipynb            # YOLOv11-seg training notebook
-│
-├── s-aging-app/                       # React + Vite frontend
-│   └── src/
-│       ├── App.jsx                    # Landing, simulator, results pages
-│       ├── AuthPage.jsx               # Login / register
-│       ├── ProfilePage.jsx            # Profile + activity history
-│       ├── api.js                     # NDJSON stream client
-│       ├── detection.js               # ONNX Runtime Web inference
-│       ├── profileApi.js              # Auth/profile HTTP client
-│       ├── utils/supabase.js          # Supabase client
-│       ├── main.jsx                   # Entry point
-│       └── index.css                  # Global styles + design tokens
-│
-├── backend/                           # FastAPI simulation API
-│   ├── main.py                        # /api/simulate NDJSON stream
-│   ├── sca_engine.py                  # SCA driver
-│   ├── leaf_renderer.py               # PyVista 3D renderer
-│   ├── run_simulation.py              # CLI runner (no API)
-│   ├── requirements.txt
-│   └── simulation/
-│       ├── sca.py                     # Moore-8 update rule
-│       ├── environment.py             # Temp/RH/density modulation
-│       ├── mask.py                    # Seed grid from YOLO mask
-│       ├── mesh.py                    # Leaf mesh geometry
-│       └── simulator.py               # Per-disease orchestration
-│
-└── auth-service/                      # Node + Express auth/log API
-    └── src/
-        ├── index.js                   # Routes
-        ├── auth/                      # register, login
-        ├── profile/                   # profile + picture upload
-        ├── logging/                   # activity logger
-        ├── middleware/                # Supabase JWT guard
-        ├── config/supabase.js
-        └── utils/errorHandler.js
+cycle enginePower << 100 @
+snapshot "Baseline" @
+entity Shield {
+    canon active << fixed @
+}
+Shield aegis << invoke Shield @
+bootstrap ( enginePower > 50 ) {
+    enginePower << enginePower - 25 @
+} origin @
+observe enginePower @
 ```
 
 ---
 
-## Key endpoints
+## Compiler pipeline
 
-**Simulation API** (`http://localhost:8001`)
-- `GET  /api/health`
-- `POST /api/simulate` → NDJSON stream of `{ step, month, image, stats, env }`
+Each script is processed in order, and compilation stops at the first error.
 
-**Auth/logs API** (`http://localhost:3001`)
-- `POST /api/auth/register`, `/api/auth/login`, `/api/auth/logout`
-- `GET  /api/profile`, `PUT /api/profile`, `/api/profile/username`, `/api/profile/password`
-- `POST /api/profile/picture`, `DELETE /api/profile/picture`
-- `GET  /api/logs`, `/api/logs/stats`, `/api/logs/search`
+1. **Phase 1: Lexical analysis (`tokenize`).** Regular-expression token rules turn source text into tokens (`DATATYPE`, `STATE_COMMAND`, `RETROCAUSAL_ASSIGNMENT`, `ANCHOR_DELIMITER`, `NUMERIC_LITERAL`, `TRACE_LITERAL`, and so on). Characters that match no rule are reported as *foreign artifacts* and skipped.
+2. **Phase 2: Syntax analysis (`Parser`).** The script is split into statements, and each one is checked against its grammar rule, such as a missing `<<` or a missing `@`.
+3. **Phase 3: Semantic analysis (`SemanticAnalyzer`).** Valid statements are executed against the Universal Symbol Table. This phase covers type checking (for example, a `cycle` cannot hold a `trace` literal), scope tracking, snapshot and revert, entity registration, object instantiation, and `bootstrap` execution.
+
+### Symbol table
+
+Every variable records its **type**, **value**, **scope level**, and **byte offset**. Offsets grow within each scope level using these sizes:
+
+| Type | Bytes |
+|---|---|
+| `cycle` | 4 |
+| `trace` | 1 |
+| `canon` | 1 |
+| object (`Obj`) | 8 |
+
+`snapshot` stores a deep copy of the symbol table and scope offsets, and `revert` restores it. `prune` removes a variable, or collapses a branch when the target is `branch`. A `bootstrap` loop is capped at 20 iterations to guard against infinite loops.
 
 ---
 
-## Evaluation
+## Story Mode walkthrough
 
-The system is evaluated against:
-- **Detection performance** — Mask mAP, Precision, Recall (YOLOv11-seg)
-- **Simulation accuracy** — IoU, SSIM against expert-annotated progressions
-- **Software quality** — ISO/IEC 25010 (Functionality, Performance Efficiency, Interaction Capability, Maintainability, Security)
+A rogue agent has erased a historical figure and the timeline is fracturing. Complete each directive in order to progress. The status indicator and timeline visualizer change as the timeline recovers.
+
+| Mission | Objective | Solution |
+|---|---|---|
+| 1 | Initialize the core | `cycle energy << 50 @` |
+| 2 | Send a distress signal | `trace beacon << "SOS" @` |
+| 3 | Save the fractured timeline | `snapshot "Fracture" @` |
+| 4 | Excise the corrupted variable | `prune energy @` |
+| 5 | Time travel back | `revert "Fracture" @` |
+| 6 | Reject the paradox | `canon paradox << erased @` |
+| 7 | Design the containment shield | `entity Shield { canon active << fixed @ }` |
+| 8 | Deploy the shield | `Shield aegis << invoke Shield @` |
+| 9 | Inspect the shield | `observe aegis @` |
+| 10 | Purge the temporal decay | `bootstrap ( energy > 0 ) { energy << energy - 10 @ } origin @` |
+
+After Mission 10 the paradox is contained and Sandbox Mode is unlocked.
 
 ---
 
-## Team
+## Test case matrix
 
-Thesis by Balitayo, Baranda, Reyes, and Rodriguez · Adviser: Mr. Anthony D. Aquino · BS Computer Science, FEU Institute of Technology, March 2026.
+| Test | Input | Expected result | Status |
+|---|---|---|---|
+| **TC1: Happy path** | The example script shown above | All phases pass and the data is stored | PASS |
+| **TC2: Syntax error** | `cycle velocity 88 @` followed by `observe velocity @` | Assignment operator error | FAIL |
+| **TC3: Semantic error** | `cycle temperature << "Critical" @` followed by `observe temperature @` | Type mismatch (`cycle` assigned a `trace` literal) | FAIL |
+| **TC4: Lexical error** | `canon *checkTimeline << true @` | Foreign artifact encountered | FAIL |
+
+"FAIL" means the compiler rejects the input as expected for that error case.
+
+---
+
+## Repository contents
+
+| File | Description |
+|---|---|
+| [PARADOX_FINAL.py](PARADOX_FINAL.py) | Complete source: lexer, parser, semantic analyzer, and Tkinter GUI |
+| [PARADOX_DOCUMENTATION.pdf](PARADOX_DOCUMENTATION.pdf) | Official language documentation and cheat sheet |
+| [PARADOX_SCREENSHOTS.pdf](PARADOX_SCREENSHOTS.pdf) | Screenshots of the application |
+
+A demonstration video of the project is not included in this repository.
